@@ -17,26 +17,8 @@ nunjucks.configure("./", {
     noCache: true,
 });
 
-const donors = [
-    {
-        name: "Felipe Silveira",
-        blood: "AB+"
-    },
-    {
-        name: "Cleiton Souza",
-        blood: "B+"
-    },
-    {
-        name: "Mayk Brito",
-        blood: "A-"
-    },
-    {
-        name: "Robson Marques",
-        blood: "O+"
-    },
-]
-
 server.get('/', function(req, res){
+    const donors = [];
     return res.render("index.html",  {donors})
 });
 
@@ -45,14 +27,21 @@ server.post('/', function(req, res){
     const email = req.body.email;
     const blood = req.body.blood;
 
-    donors.push({
-        name: name,
-        blood: blood,
-    });
+    if(name == "" || email == "" || blood == ""){
+        return res.send("All fields are required!")
+    }
 
-    return res.redirect("/")
+    const query = `INSERT INTO donors ("name", "email", "blood") 
+        VALUES ($1, $2, $3)`;
+
+    const values = [name, email, blood];
+    mongoose.Query(query, values, function(err){
+        if(err) return res.send("Database error.");
+        
+        return res.redirect("/");
+    });
 });
 
 server.listen(3000, function(){
-    console.log("iniciei o servidor")
+    console.log("Server initialized.")
 });
